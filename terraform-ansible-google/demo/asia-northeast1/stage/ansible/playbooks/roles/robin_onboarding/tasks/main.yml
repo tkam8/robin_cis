@@ -54,7 +54,7 @@
 - name: Change file permissions for script
   file:
     path: "{{ robin_install_local_path }}"
-    mode: '0700'
+    mode: '0755'
 
 # # Create Namespace
 # - name: Create a k8s namespace
