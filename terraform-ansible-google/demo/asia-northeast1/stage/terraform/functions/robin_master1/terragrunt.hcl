@@ -24,13 +24,13 @@ dependency "vpc" {
 
 # These are the variables we have to pass in to use the module specified in the terragrunt configuration above
 inputs = {
-  name_prefix          = "demo-robin-master"
-  project              = "f5-gcs-4261-sales-apcj-japan"
-  region               = "asia-northeast1"
-  zone                 = "asia-northeast1-b"
-  network              = dependency.vpc.outputs.network
-  subnetwork           = dependency.vpc.outputs.public_subnetwork
-  robin_instance_type  = "e2-standard-4"
-  disk_size            = 50
-  app_tag_value        = "terrydemo"
+  name_prefix           = "demo-robin-master"
+  project               = "f5-gcs-4261-sales-apcj-japan"
+  region                = "asia-northeast1"
+  zone                  = "asia-northeast1-b"
+  network               = dependency.vpc.outputs.network
+  subnetwork            = dependency.vpc.outputs.public_subnetwork
+  centos_instance_type  = "e2-standard-4"
+  disk_size             = 50
+  app_tag_value         = "terrydemo"
 }
