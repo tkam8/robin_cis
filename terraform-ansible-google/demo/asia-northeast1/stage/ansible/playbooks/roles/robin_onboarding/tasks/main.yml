@@ -23,6 +23,12 @@
     state: stopped
     enabled: False
 
+# Install kexec-tools
+- name: install the latest version of kexec-tools
+  yum:
+    name: kexec-tools
+    state: latest
+
 ### Download Robin files  ###
 
 # Copy over gcp creds file for gcp_storage_object module
