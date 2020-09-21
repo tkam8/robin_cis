@@ -81,9 +81,9 @@ dependency "robin3" {
 inputs = {
   terragrunt_path              = "${get_terragrunt_dir()}"
   app_tag_value                = "terryrobincis"
-  robin1_endpoint                = dependency.robin_master1.outputs.centos_public_ip
-  robin2_endpoint                = dependency.robin_worker1.outputs.centos_public_ip
-  robin3_endpoint                = dependency.robin_worker2.outputs.centos_public_ip
+  robin1_endpoint                = dependency.robin1.outputs.centos_public_ip
+  robin2_endpoint                = dependency.robin2.outputs.centos_public_ip
+  robin3_endpoint                = dependency.robin3.outputs.centos_public_ip
   // cluster1_username            = dependency.gke1.outputs.cluster_username
   // cluster2_username            = dependency.gke2.outputs.cluster_username
   // cluster3_username            = dependency.gke3.outputs.cluster_username
