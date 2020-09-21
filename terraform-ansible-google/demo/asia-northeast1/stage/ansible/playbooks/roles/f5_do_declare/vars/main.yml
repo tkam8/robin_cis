@@ -1,0 +1,7 @@
+---
+
+do_template_name: "do_scalen_template1"
+
+#######AS3 service definition########
+do_template_file_name: "{{ do_template_name + '.j2'}}"
+do_declaration_file_name: "{{ do_template_name + '.json'}}"

@@ -1,0 +1,162 @@
+---
+
+# debugging
+- name: "Ansible | Print role_path"
+  debug:
+    msg: "The role path is {{ role_path }}"
+
+# show all the hosts in the current play
+- name: find several related variables
+  debug: msg="{{ lookup('vars', 'ansible_play_hosts', 'ansible_play_batch', 'ansible_play_hosts_all') }}"
+
+# Create Namespace
+- name: Create a k8s namespace
+  k8s:
+    name: upstream1
+    api_version: v1
+    host: "{{ item.host }}"
+    kubeconfig: "{{ role_path }}/../../../kubeconfig-{{ item.kubeconfig }}"
+    kind: Namespace
+    state: present
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { host: "{{ hostvars[groups['gke_systems'][0]].gke1_url }}", kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { host: "{{ hostvars[groups['gke_systems'][1]].gke2_url }}", kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { host: "{{ hostvars[groups['gke_systems'][2]].gke3_url }}", kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+
+# Create F5 CIS deployment with all prerequisites
+
+# - debug:
+#     var: bigip_username_encoded
+
+# - debug:
+#     var: bigip_pass_encoded
+
+- name: Create F5 secret from a local file 
+  k8s:
+    state: present
+    kubeconfig: "{{ role_path }}/../../../kubeconfig-{{ item.kubeconfig }}"
+    definition: "{{ lookup('template', '{{ role_path }}/templates/secret_f5_cis.yml.j2') }}"
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+
+# - name: Create F5 secret with inline definition
+#   k8s:
+#     state: present
+#     definition:
+#       apiVersion: v1
+#       kind: Secret
+#       metadata:
+#         name: bigip-login
+#         namespace: kube-system
+#       type: Opaque
+#       data:
+#         username: "{{ bigip_username_encoded }}"
+#         password: "{{ bigip_pass_encoded }}"
+
+# - name: Create F5 secret using kubectl
+#   shell:
+#     cmd: kubectl create secret generic bigip-login -n kube-system --from-literal=username=admin --from-literal=password={{bigip_pass}}
+#   register: create_secret
+#   become: true
+#   connection: ssh
+# - debug: var=create_secret.stdout_lines
+
+- name: Create ServiceAccount, Clusterrole, clusterrolebinding from a local file 
+  k8s:
+    state: present
+    kubeconfig: "{{ role_path }}/../../../kubeconfig-{{ item.kubeconfig }}"
+    src: "{{ role_path }}/templates/svcacct_crbinding_f5_cis.yml"
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+
+# Plan is to create three CIS deployments per cluster that points to three different BIG-IPs (one-to-one mapping)
+- name: Create the F5 CIS Deployments from a local file and wait to become ready
+  k8s:
+    state: present
+    kubeconfig: "{{ role_path }}/../../../kubeconfig-{{ item.kubeconfig }}"
+    definition: "{{ lookup('template', '{{ role_path }}/templates/deployment_f5_{{ item.definition }}.yml.j2') }}"
+    wait: yes
+    wait_condition: 
+      type=Available
+      status=True
+    wait_timeout: 240
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { definition: cis1-1, kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { definition: cis1-2, kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { definition: cis1-3, kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { definition: cis2-1, kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { definition: cis2-2, kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { definition: cis2-3, kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { definition: cis3-1, kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+    - { definition: cis3-2, kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+    - { definition: cis3-3, kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+
+
+# Create NGINX Deployment 1 on all clusters
+- name: Create NGINX Deployment 1 from a local file 
+  k8s:
+    state: present
+    kubeconfig: "{{ role_path }}/../../../kubeconfig-{{ item.kubeconfig }}"
+    src: "{{ role_path }}/templates/pod_nginx1.yml"
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+
+# Create NGINX Deployment 2 on all clusters
+- name: Create NGINX Deployment 2 from a local file 
+  k8s:
+    state: present
+    kubeconfig: "{{ role_path }}/../../../kubeconfig-{{ item.kubeconfig }}"
+    src: "{{ role_path }}/templates/pod_nginx2.yml"
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { kubeconfig: 1, when: "{{ groups['gke_systems'][0] }}" }
+    - { kubeconfig: 2, when: "{{ groups['gke_systems'][1] }}" }
+    - { kubeconfig: 3, when: "{{ groups['gke_systems'][2] }}" }
+
+# Create F5 CIS configmap to expose Kibana via BIG-IP
+
+# - name: Create F5 CIS AS3 configmap from a local file 
+#   k8s:
+#     state: present
+#     kubeconfig: "{{ role_path }}/../../../kubeconfig-1"
+#     definition: "{{ lookup('template', '{{ role_path }}/templates/configmap_f5_cis.yml.j2') }}"
+
+# - name: Get NGINX service
+#   k8s_facts:
+#     api_version: v1
+#     kind: Service
+#     name: nginx-upstream1
+#     namespace: upstream1
+#     kubeconfig: "{{ role_path }}/../../../kubeconfig"
+#   register: nginx_svc
+
+# - name: Get NGINX endpoints for deployment created earlier
+#   k8s_facts:
+#     api_version: v1
+#     kind: Endpoints
+#     name: nginx-upstream1
+#     namespace: upstream1
+#     kubeconfig: "{{ role_path }}/../../../kubeconfig"
+#   register: nginx_ep
+
+# - name: debug 
+#   debug: var=nginx_ep
+
+# - name: Generate list of NGINX endpoints from the registered variable nginx_ep
+#   # Currently this assumes 1 IP address in the list 
+#   set_fact: 
+#     ep_list: "{{ [nginx_ep.resources[0].subsets[0].addresses[0].ip, nginx_ep.resources[0].subsets[0].ports[0].port]|join(':') }}"
+
+# - name: debug 
+#   debug: var=ep_list

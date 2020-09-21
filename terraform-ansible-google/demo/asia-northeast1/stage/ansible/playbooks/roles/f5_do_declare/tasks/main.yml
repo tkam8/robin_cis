@@ -1,0 +1,137 @@
+---
+
+#- name: Include vars of relevant parameters file for the as3 template
+#  include_vars:
+#    file: "{{ role_path }}/templates/as3_parameters/{{ as3_parameters_file_name }}"
+
+# Get BIG-IP facts
+- name: Collect BIG-IP Facts
+  bigip_device_facts:
+    gather_subset:
+      - devices
+    provider:
+      server: "{{ inventory_hostname }}"
+      user: "{{ ADMIN_USER }}"
+      password: "{{ ADMIN_PASSWORD }}"
+      server_port: "{{ ADMIN_HTTPS_PORT }}"
+      validate_certs: no
+      transport: rest
+  delegate_to: localhost
+  register: device_facts
+
+# Debug
+- name: Display complete information about BIG-IP Device
+  debug:
+    var: device_facts
+
+# Debug
+- name: Display only hostname of BIG-IP Device
+  debug:
+    var: device_facts.devices[0].hostname
+
+# This hostname will be used in the DO declaration for setting up HA
+- name: Set new bigip1_hostname from device_facts
+  # Currently this assumes 1 IP address in the list 
+  set_fact: 
+    bigip1_hostname: "{{ device_facts.devices[0].hostname }}"
+  when: inventory_hostname == "{{ groups['F5_systems'][0] }}"
+  delegate_to: "{{ groups['F5_systems'][0] }}"
+
+# This hostname will be used in the DO declaration for setting up HA
+- name: Set new bigip2_hostname from device_facts
+  # Currently this assumes 1 IP address in the list 
+  set_fact: 
+    bigip2_hostname: "{{ device_facts.devices[0].hostname }}"
+  when: inventory_hostname == "{{ groups['F5_systems'][1] }}"
+  delegate_to: "{{ groups['F5_systems'][1] }}"
+
+# This hostname will be used in the DO declaration for setting up HA
+- name: Set new bigip3_hostname from device_facts
+  # Currently this assumes 1 IP address in the list 
+  set_fact: 
+    bigip3_hostname: "{{ device_facts.devices[0].hostname }}"
+  when: inventory_hostname == "{{ groups['F5_systems'][2] }}"
+  delegate_to: "{{ groups['F5_systems'][2] }}"
+
+# Debug
+- name: Display hostname1 of BIG-IP Devices
+  debug:
+    var: "{{ hostvars[groups['F5_systems'][0]].bigip1_hostname }}" 
+
+# Debug
+- name: Display hostname2 of BIG-IP Devices
+  debug:
+    var: "{{ hostvars[groups['F5_systems'][1]].bigip2_hostname }}" 
+
+# Debug
+- name: Display hostname3 of BIG-IP Devices
+  debug:
+    var: "{{ hostvars[groups['F5_systems'][2]].bigip3_hostname }}" 
+
+# Loop through all BIG-IPs and only use the appropriate DO declaration
+- name: prepare the DO declaration 
+  template: 
+    src: "{{ role_path }}/templates/do_scalen_template{{ item.src }}.j2"
+    dest: "{{ role_path }}/files/do_scalen_template{{ item.dest }}.json"
+  delegate_to: localhost
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { src: 1, dest: 1, when: "{{ groups['F5_systems'][0] }}" }
+    - { src: 2, dest: 2, when: "{{ groups['F5_systems'][1] }}" }
+    - { src: 3, dest: 3, when: "{{ groups['F5_systems'][2] }}" }
+
+
+- name: Getting bigip authentication token
+  delegate_to: localhost
+  uri:
+    body: '{"username":"{{ ADMIN_USER }}","password":"{{ ADMIN_PASSWORD }}","loginProvidername":"tmos"}'
+    body_format: json
+    method: POST
+    url: "https://{{ inventory_hostname }}:{{ ADMIN_HTTPS_PORT }}/mgmt/shared/authn/login"
+    status_code: 200
+    validate_certs: no
+  register: bigip_auth_response
+  
+- name: assigning auth token to a variable 
+  set_fact:
+    bigip_auth_token: "{{ bigip_auth_response.json.token.token }}"
+    
+  ##
+  ## If the AS3 declaration takes time, may return a 202
+  ##
+- name: deploying DO declaration 
+  delegate_to: localhost
+  uri:
+    body: "{{ lookup('file', 'do_scalen_template{{ item.body }}.json') }}"
+    body_format: json
+    headers:
+      X-F5-Auth-Token: "{{ bigip_auth_token }}"
+    method: POST
+    status_code: 200,202
+    url: "https://{{ inventory_hostname }}:{{ ADMIN_HTTPS_PORT }}/mgmt/shared/declarative-onboarding"
+    validate_certs: no
+    timeout: 120
+  register: do_status
+  until: do_status is success
+  delay: 10
+  retries: 20
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { body: 1, when: "{{ groups['F5_systems'][0] }}" }
+    - { body: 2, when: "{{ groups['F5_systems'][1] }}" }
+    - { body: 3, when: "{{ groups['F5_systems'][2] }}" }
+
+##
+## Deleting json file containing the AS3 declaration since it contains API credentials information
+##
+
+- name: delete the DO declaration file
+  file: 
+    path: "{{ role_path }}/files/do_scalen_template{{ item.path }}.json"
+    state: absent
+  delegate_to: localhost
+  when: "{{ inventory_hostname == item.when }}"
+  loop:
+    - { path: 1, when: "{{ groups['F5_systems'][0] }}" }
+    - { path: 2, when: "{{ groups['F5_systems'][1] }}" }
+    - { path: 3, when: "{{ groups['F5_systems'][2] }}" }

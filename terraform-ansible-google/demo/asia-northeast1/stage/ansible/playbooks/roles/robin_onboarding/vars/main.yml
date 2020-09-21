@@ -1,0 +1,8 @@
+---
+
+
+as3_virtual_address: "{{ hostvars[groups['F5_systems'][0]].vs_ip }}"
+bigip_username_encoded: "{{ 'admin' | string | b64encode }}"
+bigip_pass: "{{ lookup('env', 'BIGIP_PASS') }}"
+bigip_pass_encoded: "{{ lookup('vars', 'bigip_pass') | string | b64encode }}"
+bigip_mgmt_port: 8443

@@ -1,0 +1,36 @@
+---
+# Ensure SSH connectivity
+- name: Wait a maximum of 120 seconds for BIG-IP port 22
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 22
+    timeout: 180
+  delegate_to: localhost
+
+- name: Provision ASM at "nominal" level
+  bigip_provision:
+    module: asm
+    level: nominal
+    provider:
+      server: "{{ inventory_hostname }}"
+      server_port: "{{ ADMIN_HTTPS_PORT }}"
+      user: "{{ ADMIN_USER }}"
+      password: "{{ ADMIN_PASSWORD }}"
+    validate_certs: no
+  delegate_to: localhost
+  register: provision_status
+  until: provision_status is success
+  delay: 10
+  retries: 20
+
+# Create partition used for CIS
+- name: Create partition "k8s" using the default route domain
+  bigip_partition:
+    name: k8s
+    provider:
+      server: "{{ inventory_hostname }}"
+      server_port: "{{ ADMIN_HTTPS_PORT }}"
+      user: "{{ ADMIN_USER }}"
+      password: "{{ ADMIN_PASSWORD }}"
+    validate_certs: no
+  delegate_to: localhost

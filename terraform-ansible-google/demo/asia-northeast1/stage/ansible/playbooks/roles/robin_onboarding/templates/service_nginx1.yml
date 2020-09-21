@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx1
+    cis.f5.com/as3-tenant: Tenant0
+    cis.f5.com/as3-app: App1
+    cis.f5.com/as3-pool: nginx_pool1
+  name: svc-nginx1
+  namespace: upstream1
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+    # Inside the cluster, what port does the service expose?
+  - port: 80
+    protocol: TCP
+    # Which port do pods selected by this service expose?
+    targetPort: 80
+  selector:
+    app: nginx1
+  sessionAffinity: None
+  # Make the service externally visible via the node IP
+  type: NodePort

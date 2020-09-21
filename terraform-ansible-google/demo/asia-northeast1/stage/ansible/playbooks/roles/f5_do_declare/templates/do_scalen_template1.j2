@@ -1,0 +1,32 @@
+{
+    "$schema": "https://raw.githubusercontent.com/F5Networks/f5-declarative-onboarding/master/src/schema/latest/base.schema.json",
+    "schemaVersion": "1.11.1",
+    "class": "Device",
+    "async": true,
+    "label": "Onboard BIG-IP into DSC cluster",
+    "Common": {
+        "class": "Tenant",
+        "configsync": {
+            "class": "ConfigSync",
+            "configsyncIp": "{{ hostvars[groups['F5_systems'][0]].vs_ip }}"
+        },
+        "syncGroup": {
+            "class": "DeviceGroup",
+            "type": "sync-only",
+            "members": [ "{{ hostvars[groups['F5_systems'][0]].vs_ip }}", "{{ hostvars[groups['F5_systems'][1]].vs_ip }}", "{{ hostvars[groups['F5_systems'][2]].vs_ip }}"],
+            "owner": "{{ hostvars[groups['F5_systems'][0]].vs_ip }}",
+            "autoSync": false,
+            "saveOnAutoSync": false,
+            "networkFailover": false,
+            "asmSync": false
+        },
+        "trust": {
+            "class": "DeviceTrust",
+            "localUsername": "{{ ADMIN_USER }}",
+            "localPassword": "{{ ADMIN_PASSWORD }}",
+            "remoteHost": "{{ hostvars[groups['F5_systems'][0]].vs_ip }}",
+            "remoteUsername": "{{ ADMIN_USER }}",
+            "remotePassword": "{{ ADMIN_PASSWORD }}"
+        }
+    }
+}

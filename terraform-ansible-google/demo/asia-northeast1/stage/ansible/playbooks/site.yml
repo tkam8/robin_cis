@@ -1,0 +1,23 @@
+
+---
+
+- name: Onboarding BIG-IP
+  hosts: F5_systems
+  gather_facts: false
+  roles:
+   - f5_onboarding
+
+
+- name: BIG-IP DO declaration
+  hosts: F5_systems
+  gather_facts: false
+  roles:
+   - f5_do_declare
+
+- name: Robin onboarding
+  hosts: robin_systems
+  connection: local
+  gather_facts: true
+  roles:
+   - robin_onboarding
+
