@@ -45,11 +45,16 @@
 
 - name: init with service account json
   shell: gsutil cp gs://{{ robin_bucket }}/{{ robin_binimg_path }} {{ robin_binimg_local_path }}
-  register: robin_install_tarball
+  register: robin_binimg_tarball
 
 - name: init with service account json
   shell: gsutil cp gs://{{ robin_bucket }}/{{ robin_k8s_path }} {{ robin_k8s_local_path }}
-  register: robin_install_tarball
+  register: robin_k8s_tarball
+
+- name: Change file permissions for script
+  file:
+    path: "{{ robin_install_local_path }}"
+    mode: '0700'
 
 # # Create Namespace
 # - name: Create a k8s namespace
