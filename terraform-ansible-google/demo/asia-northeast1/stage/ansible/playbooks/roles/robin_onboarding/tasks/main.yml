@@ -13,8 +13,8 @@
 - name: Disable SELinux
   selinux:
     state: disabled
-  register: result
-  failed_when: result.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
+  register: selinux_result
+  #failed_when: result.msg | default('ok', True) is not search('(^ok$|libselinux-python|(SELinux state changed))')
 
 # Disable firewalld
 - name: Stop and disable firewalld.
@@ -55,6 +55,20 @@
   file:
     path: "{{ robin_install_local_path }}"
     mode: '0755'
+
+- name: Reboot machines for setting SELinux Enforcing
+  shell: "sleep 2 && reboot"
+  async: 1
+  poll: 0
+  when: selinux_result.reboot_required
+
+- name: Wait for machines down
+  local_action: wait_for host={{ inventory_hostname }} port={{ ssh_port }} state=stopped
+  when: selinux_result.reboot_required
+
+- name: Wait for machines up
+  local_action: wait_for host={{ inventory_hostname }} port={{ ssh_port }} state=started
+  when: selinux_result.reboot_required
 
 # # Create Namespace
 # - name: Create a k8s namespace
