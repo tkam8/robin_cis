@@ -24,39 +24,6 @@ include {
   path = "../../../../terragrunt.hcl"
 }
 
-dependency "gke1" {
-  config_path = "../functions/gke_cluster1"
-
-  mock_outputs = {
-    gke1_cluster_name    = "clusterName1"
-    gke1_endpoint        = "3.3.3.3"
-    #cluster1_username    = "admin"
-    #cluster1_password    = "default"
-  }
-}
-
-dependency "gke2" {
-  config_path = "../functions/gke_cluster2"
-
-  mock_outputs = {
-    gke2_cluster_name    = "clusterName2"
-    gke2_endpoint        = "3.3.3.4"
-    #cluster2_username    = "admin"
-    #cluster2_password    = "default"
-  }
-}
-
-dependency "gke3" {
-  config_path = "../functions/gke_cluster3"
-
-  mock_outputs = {
-    gke3_cluster_name    = "clusterName3"
-    gke3_endpoint        = "3.3.3.5"
-    #cluster3_username    = "admin"
-    #cluster3_password    = "default"
-  }
-}
-
 dependency "bigip1" {
   config_path = "../functions/bip1"
 
