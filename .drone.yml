@@ -32,21 +32,21 @@ steps:
   - chmod 400 /drone/src/gcp/gcp_ssh_key
   - printenv GOOGLE_CREDENTIALS > /drone/src/gcp/gcp_creds.json
 
-# - name: Apply Ansible playbook (asia)
-#   image: tkam8/tfansible:latest
-#   environment:
-#     BIGIP_PASS:
-#       from_secret: bigip_pass
-#   commands: 
-#   # Ansible complains that the drone generated netrc file being too permissive by default
-#   - ls -lah /root
-#   # .netrc file does not exist here so will comment this out for now
-#   #- chmod 600 /root/.netrc
-#   - ls terraform-ansible-google/demo/asia-northeast1/stage/ansible/
-#   - cat terraform-ansible-google/demo/asia-northeast1/stage/ansible/playbooks/group_vars/F5_systems
-#   - cat terraform-ansible-google/demo/asia-northeast1/stage/ansible/playbooks/inventory/hosts
-#   - cd terraform-ansible-google/demo/asia-northeast1/stage/ansible/playbooks/
-#   - ansible-playbook --inventory inventory/hosts -vvvv site.yml
+- name: Apply Ansible playbook (asia)
+  image: tkam8/tfansible:latest
+  environment:
+    BIGIP_PASS:
+      from_secret: bigip_pass
+  commands: 
+  # Ansible complains that the drone generated netrc file being too permissive by default
+  - ls -lah /root
+  # .netrc file does not exist here so will comment this out for now
+  #- chmod 600 /root/.netrc
+  - ls terraform-ansible-google/demo/asia-northeast1/stage/ansible/
+  - cat terraform-ansible-google/demo/asia-northeast1/stage/ansible/playbooks/group_vars/F5_systems
+  - cat terraform-ansible-google/demo/asia-northeast1/stage/ansible/playbooks/inventory/hosts
+  - cd terraform-ansible-google/demo/asia-northeast1/stage/ansible/playbooks/
+  - ansible-playbook --inventory inventory/hosts -vvvv site.yml
 
 
 # - name: Slack notification

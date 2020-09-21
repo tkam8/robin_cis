@@ -17,6 +17,8 @@
 - name: Robin onboarding
   hosts: robin_systems
   connection: local
+  become: yes
+  become_method: sudo
   gather_facts: true
   roles:
    - robin_onboarding
