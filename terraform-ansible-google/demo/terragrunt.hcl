@@ -46,15 +46,15 @@ inputs = merge(
   },
   {
     ## The URL for downloading F5 Declarative Onboarding. Please check and update the latest DO URL from https://github.com/F5Networks/f5-declarative-onboarding/releases
-    DO_URL            = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.11.0/f5-declarative-onboarding-1.11.0-1.noarch.rpm"
+    DO_URL            = "https://github.com/F5Networks/f5-declarative-onboarding/releases/download/v1.16.0/f5-declarative-onboarding-1.16.0-8.noarch.rpm"
   },
   {
     ## The URL for downloading F5 Application Services 3 extension. Please check and update the latest TS URL from https://github.com/F5Networks/f5-appsvcs-extension/releases/latest 
-    TS_URL            = "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.14.0/f5-telemetry-1.14.0-2.noarch.rpm"
+    TS_URL            = "https://github.com/F5Networks/f5-telemetry-streaming/releases/download/v1.15.0/f5-telemetry-1.15.0-4.noarch.rpm"
   },
   {
     ## The URL for downloading F5 Application Services 3 extension. Please check and update the latest AS3 URL from https://github.com/F5Networks/f5-telemetry-streaming/releases/latest 
-    AS3_URL           = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.22.1/f5-appsvcs-3.22.1-1.noarch.rpm"
+    AS3_URL           = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.23.0/f5-appsvcs-3.23.0-5.noarch.rpm"
   }
 )
 
